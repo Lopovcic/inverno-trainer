@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inverno-Trainer</title>
+<meta name="description" content="Übungswerkzeug für Vivaldis „Winter“, 3. Satz (Solo-Violine): Tonhöhenerkennung per Mikrofon, Ton-für-Ton-Modus, Passagen-Bewertung, Referenzaufnahmen und 3D-Griffbrett.">
+<meta name="theme-color" content="#131B22" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FBFCFD" media="(prefers-color-scheme: light)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%239C4F1C'/%3E%3Cpath d='M12 6c-2 0-3 1.4-3 3s1.2 2.3 2.2 2.6c1 .3 1.8 1 1.8 2.4v6c0 1.4-.8 2.1-1.8 2.4C10.2 22.7 9 23.4 9 25s1 3 3 3' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M20 6c2 0 3 1.4 3 3s-1.2 2.3-2.2 2.6c-1 .3-1.8 1-1.8 2.4v6c0 1.4.8 2.1 1.8 2.4 1 .3 2.2 1 2.2 2.6s-1 3-3 3' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,700;1,400&family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,500&display=swap">
+<link rel="stylesheet" href="css/app.css?v=12">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M12 5c-2.2 0-3.4 1.5-3.4 3.3s1.3 2.5 2.4 2.8c1.1.3 1.9 1.1 1.9 2.6v6.6c0 1.5-.8 2.3-1.9 2.6-1.1.3-2.4 1-2.4 2.8S9.8 29 12 29" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M20 5c2.2 0 3.4 1.5 3.4 3.3s-1.3 2.5-2.4 2.8c-1.1.3-1.9 1.1-1.9 2.6v6.6c0 1.5.8 2.3 1.9 2.6 1.1.3 2.4 1 2.4 2.8S22.2 29 20 29" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12.6" cy="8" r="1.3" fill="currentColor"/><circle cx="19.4" cy="26" r="1.3" fill="currentColor"/></svg>
+      <div class="brand-text">
+        <span class="brand-name">Inverno<span class="hy">-</span>Trainer</span>
+        <span class="brand-sub">Vivaldi · L’inverno RV 297 · III. Allegro · Violino principale</span>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Übungsmodus" data-t-attr="aria-label">
+      <button class="tab" role="tab" id="tab-step" aria-selected="true" aria-controls="panel-step" data-t>Ton für Ton</button>
+      <button class="tab" role="tab" id="tab-passage" aria-selected="false" aria-controls="panel-passage" data-t>Passage</button>
+      <button class="tab" role="tab" id="tab-refs" aria-selected="false" aria-controls="panel-refs" data-t>Referenzen</button>
+      <button class="tab" role="tab" id="tab-tasks" aria-selected="false" aria-controls="panel-tasks" data-t>Aufgaben</button>
+    </div>
+    <button class="mic" id="micBtn" type="button" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="mic-label" id="micLabel">Mikrofon starten</span>
+      <span class="meter" aria-hidden="true"><i id="micMeter"></i></span>
+    </button>
+    <select class="langsel" id="langSel" aria-label="Sprache / Jezik"><option value="de">DE</option><option value="sr">SR</option><option value="sr-Cyrl">СР</option></select>
+    <button class="iconbtn" id="helpBtn" type="button" aria-label="Anleitung" data-t-attr="aria-label">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.9v.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.2" r="1.1" fill="currentColor"/></svg>
+    </button>
+    <button class="iconbtn" id="settingsBtn" type="button" aria-label="Einstellungen" data-t-attr="aria-label">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.7 7.7 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.5A7.7 7.7 0 0 0 7 6.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.7 7.7 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.7 7.7 0 0 0 2.6-1.5l2.4 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </button>
+  </header>
+
+  <main class="workspace">
+    <section class="col-score" aria-label="Noten" data-t-attr="aria-label">
+      <div class="selbar">
+        <div class="sections" id="sectionChips" role="group" aria-label="Abschnitte (Buchstaben)" data-t-attr="aria-label"></div>
+        <div class="range">
+          <label for="mFrom" data-t>Takt</label>
+          <input id="mFrom" type="number" min="1" max="153" value="1" inputmode="numeric">
+          <span aria-hidden="true">–</span>
+          <label class="sr-only" for="mTo" data-t>bis Takt</label>
+          <input id="mTo" type="number" min="1" max="153" value="24" inputmode="numeric">
+        </div>
+        <button class="btn small" id="wholeBtn" type="button" data-t>Ganzer Satz</button>
+        <label class="toggle"><input type="checkbox" id="laneToggle" checked> <span data-t>Griffspur</span></label>
+        <span class="selinfo" id="selInfo"></span>
+      </div>
+      <div class="scene" id="scene"></div>
+      <div class="taskbanner" id="taskBanner" hidden></div>
+      <div class="card analysis" id="analysisBand" hidden>
+        <div class="analysis-head">
+          <h3 id="analysisTitle">Tonhöhenverlauf</h3>
+          <button class="btn small" id="playRecBtn" type="button">▶ Aufnahme anhören</button>
+          <button class="btn small" id="closeAnalysisBtn" type="button" aria-label="Analyse ausblenden" data-t-attr="aria-label">✕</button>
+        </div>
+        <div style="position:relative">
+          <canvas class="chart" id="chart" aria-label="Tonhöhenverlauf: Sollnoten als Balken, gespielte Tonhöhe als Linie" data-t-attr="aria-label" role="img"></canvas>
+          <div class="chart-tip" id="chartTip" hidden></div>
+        </div>
+        <p class="muted" id="chartLegend" data-t>Balken = Sollton (±50 Cent), Linie = deine gespielte Tonhöhe, Punkte = gemessene Intonation je Note. Klicke eine Note für Details.</p>
+      </div>
+      <div class="sheet" id="sheet">
+        <div id="score"><p class="score-loading" data-t>Noten werden gesetzt …</p></div>
+      </div>
+      <p class="footer-note" data-t-html>Notentext: <a href="https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=351" target="_blank" rel="noopener">Mutopia Project</a> (Mutopia-2010/02/08-351, nach der Erstausgabe Amsterdam 1725), Lizenz <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>. Fingersätze sind Vorschläge des Trainers und lassen sich pro Note ändern.</p>
+    </section>
+
+    <aside class="col-inst" aria-label="Instrument und Stimmgerät" data-t-attr="aria-label">
+      <div class="card viewer-wrap">
+        <div class="viewer" id="viewer" aria-hidden="true"></div>
+        <div class="views" role="group" aria-label="3D-Ansicht" data-t-attr="aria-label">
+          <button type="button" data-view="player" aria-pressed="false" data-t>Spieler</button>
+          <button type="button" data-view="board" aria-pressed="false" data-t>Griffbrett</button>
+          <button type="button" data-view="full" aria-pressed="false" data-t>Ganz</button>
+        </div>
+        <div class="legend" aria-hidden="true"><span><i class="t"></i><span data-t>Ziel</span></span><span><i class="p" id="legendPlayed"></i><span data-t>gespielt</span></span></div>
+      </div>
+
+      <div class="card tuner" id="tuner">
+        <div class="tuner-top">
+          <div>
+            <div class="label" id="targetLabel">Zielton</div>
+            <div class="target-name" id="targetName">–</div>
+          </div>
+          <div class="target-meta" id="targetMeta"></div>
+          <div class="live">
+            <div class="label" data-t>Gespielt</div>
+            <div class="live-cents state-idle" id="liveCents">–</div>
+            <div class="live-note" id="liveNote"></div>
+          </div>
+        </div>
+        <div class="cmeter" aria-hidden="true">
+          <div class="track"></div>
+          <div class="zone" id="cZone"></div>
+          <div class="tick" style="left:0%"></div><div class="tick" style="left:25%"></div><div class="tick c" style="left:50%"></div><div class="tick" style="left:75%"></div><div class="tick" style="left:100%"></div>
+          <div class="needle" id="needle" style="left:50%"></div>
+          <div class="scale"><span>−50</span><span>−25</span><span>0</span><span>+25</span><span>+50 ct</span></div>
+        </div>
+        <div class="hold" aria-hidden="true"><i id="holdBar"></i></div>
+        <div class="hint" id="hint">Wähle Takte in den Noten und starte das Mikrofon.</div>
+        <div id="srStatus" class="sr-only" role="status" aria-live="polite"></div>
+      </div>
+
+      <!-- Ton für Ton -->
+      <section class="card panel" id="panel-step" role="tabpanel" aria-labelledby="tab-step">
+        <div class="row split">
+          <h2 data-t>Ton für Ton</h2>
+          <span class="muted" id="stepWhere"></span>
+        </div>
+        <p class="muted" data-t>Der nächste Ton kommt erst, wenn du den aktuellen sauber triffst und kurz hältst.</p>
+        <div class="progress"><span><span class="big" id="stepCount">0</span> <span class="muted" id="stepTotal">/ 0 Töne</span></span><span class="muted" id="stepTime"></span></div>
+        <div class="bar"><i id="stepBar"></i></div>
+        <div class="row">
+          <button class="btn" id="stepPrev" type="button" aria-label="Vorheriger Ton" data-t-attr="aria-label">◀</button>
+          <button class="btn primary grow" id="stepStart" type="button">Üben starten</button>
+          <button class="btn" id="stepNext" type="button" aria-label="Ton überspringen" data-t-attr="aria-label">▶▶</button>
+          <button class="btn" id="stepTone" type="button" title="Zielton anhören (R)" data-t-attr="title">♪ Ton</button>
+        </div>
+        <div class="opts">
+          <div class="field">
+            <label for="tolRange"><span data-t>Toleranz</span> <output id="tolOut" class="num">±15 ct</output></label>
+            <input type="range" id="tolRange" min="5" max="40" step="1" value="15">
+          </div>
+          <div class="field">
+            <label for="holdRange"><span data-t>Haltezeit</span> <output id="holdOut" class="num">300 ms</output></label>
+            <input type="range" id="holdRange" min="100" max="1200" step="50" value="300">
+          </div>
+          <label class="toggle"><input type="checkbox" id="autoTone"> <span data-t>Zielton vor jedem Ton vorspielen</span></label>
+          <label class="toggle"><input type="checkbox" id="mergeRep" checked> <span data-t>Wiederholte Töne zusammenfassen</span></label>
+          <label class="toggle"><input type="checkbox" id="loopStep"> <span data-t>Auswahl in Schleife üben</span></label>
+        </div>
+        <div id="stepStats" hidden>
+          <div class="stats">
+            <div class="stat"><b id="sHit">0</b><span data-t>getroffen</span></div>
+            <div class="stat"><b id="sAvg">–</b><span data-t>Ø bis Treffer</span></div>
+            <div class="stat"><b id="sSkip">0</b><span data-t>übersprungen</span></div>
+          </div>
+          <p class="label" style="margin-top:10px" data-t>Am längsten gesucht</p>
+          <ul class="list" id="sHard"></ul>
+        </div>
+      </section>
+
+      <!-- Passage -->
+      <section class="card panel" id="panel-passage" role="tabpanel" aria-labelledby="tab-passage" hidden>
+        <div class="row split">
+          <h2 data-t="Passage aufnehmen & bewerten">Passage aufnehmen &amp; bewerten</h2>
+        </div>
+        <p class="muted" id="pasInfo"></p>
+        <div class="field">
+          <label for="tempoRange"><span data-t>Tempo</span> <output id="tempoOut" class="num">♩. = 40</output></label>
+          <input type="range" id="tempoRange" min="16" max="76" step="1" value="40">
+        </div>
+        <div class="opts">
+          <label class="toggle"><input type="checkbox" id="countIn" checked> <span data-t>Einzählen (1 Takt)</span></label>
+          <label class="toggle"><input type="checkbox" id="metroOn"> <span data-t>Metronom während der Aufnahme (Kopfhörer!)</span></label>
+          <label class="toggle"><input type="checkbox" id="followOn" checked> <span data-t>Mitlauf-Cursor im Tempo</span></label>
+        </div>
+        <div class="row">
+          <button class="btn rec grow" id="recBtn" type="button"><span class="recdot" aria-hidden="true"></span><span id="recLabel">Aufnehmen</span></button>
+          <button class="btn" id="previewBtn" type="button" title="Passage mit dem Synthesizer vorspielen" data-t-attr="title">♪ Vorspielen</button>
+          <button class="btn" id="refPlayBtn" type="button" hidden>▶ Referenz</button>
+        </div>
+        <div class="row">
+          <label class="btn small" for="analyzeFile" data-t>Aufnahme-Datei analysieren …</label>
+          <input type="file" id="analyzeFile" accept="audio/*,video/*" hidden>
+          <button class="btn ghost small" id="demoBtn" type="button" data-t>Demo ohne Geige</button>
+        </div>
+        <div class="bar" id="anaBar" hidden><i></i></div>
+        <div id="result" hidden></div>
+        <div id="history" hidden>
+          <p class="label" data-t>Verlauf dieser Auswahl</p>
+          <svg class="spark" id="spark" preserveAspectRatio="none"></svg>
+          <p class="muted" id="histInfo"></p>
+        </div>
+      </section>
+
+      <!-- Referenzen -->
+      <section class="card panel" id="panel-refs" role="tabpanel" aria-labelledby="tab-refs" hidden>
+        <div class="row split">
+          <h2 data-t>Referenzaufnahmen</h2>
+        </div>
+        <p class="muted" data-t>Lade eine Aufnahme (z. B. deine Lieblingsinterpretation oder einen Play-Along) – der Trainer findet jeden Takt darin automatisch. Danach spielst du jede ausgewählte Passage als Referenz ab, auch verlangsamt ohne Tonhöhenänderung.</p>
+        <div class="dropzone" id="refDrop">
+          <p style="margin:0 0 8px" data-t>Audio- oder Videodatei hierher ziehen</p>
+          <div class="row" style="justify-content:center">
+            <label class="btn small primary" for="refFile" data-t>Datei wählen …</label>
+            <input type="file" id="refFile" accept="audio/*,video/*" hidden>
+            <button class="btn small" id="refRecBtn" type="button">● Über Mikrofon mitschneiden</button>
+          </div>
+        </div>
+        <details>
+          <summary class="muted" style="cursor:pointer" data-t>YouTube-Link als Referenz hinzufügen</summary>
+          <div class="field" style="margin-top:8px">
+            <label for="ytUrl" data-t>Link</label>
+            <input class="textin" id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=…" value="https://www.youtube.com/watch?v=rMExLLrosGQ">
+            <label for="ytName" data-t>Name</label>
+            <input class="textin" id="ytName" type="text" value="Play-Along (Violin Learning Made Easy)">
+            <button class="btn small" id="ytAdd" type="button" style="justify-self:start" data-t>Link hinzufügen</button>
+          </div>
+          <p class="muted" style="margin-top:8px" data-t>YouTube lässt sich nicht direkt analysieren. Trage ein, bei welcher Video-Zeit Takt 1 beginnt – dann öffnet der Trainer das Video an jeder gewählten Stelle. Für Klang-Analyse und Abspielen im Trainer: Video abspielen und über Mikrofon mitschneiden.</p>
+        </details>
+        <div class="bar" id="refBar" hidden><i></i></div>
+        <div id="refList" class="anchors"></div>
+        <div class="field" id="refRateWrap" hidden>
+          <label for="refRate"><span data-t>Abspieltempo</span> <output id="refRateOut" class="num">100 %</output></label>
+          <input type="range" id="refRate" min="50" max="100" step="5" value="100">
+          <label class="toggle"><input type="checkbox" id="refLoop"> <span data-t>Auswahl in Schleife</span></label>
+        </div>
+      </section>
+
+      <!-- Aufgaben (Lehrer ↔ Schüler) -->
+      <section class="card panel" id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks" hidden>
+        <div class="row split">
+          <h2 data-t>Aufgaben</h2>
+          <div class="seg role" id="roleSeg" role="group" aria-label="Rolle" data-t-attr="aria-label">
+            <button type="button" data-role="student" aria-pressed="true" data-t>Schüler</button>
+            <button type="button" data-role="teacher" aria-pressed="false" data-t>Lehrer</button>
+          </div>
+        </div>
+        <div id="tasksBody"></div>
+        <input type="file" id="planFile" accept=".json,application/json" hidden>
+        <input type="file" id="reportFile" accept=".json,application/json" hidden>
+        <input type="file" id="taskRefFile" accept="audio/*,video/*" hidden>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<div class="popover" id="fingerPop" hidden role="dialog" aria-label="Fingersatz ändern" data-t-attr="aria-label"></div>
+
+<dialog id="settingsDlg" aria-labelledby="setTitle">
+  <form method="dialog" class="dlg">
+    <h2 id="setTitle" data-t>Einstellungen</h2>
+    <div class="field">
+      <label for="langSel2" data-t>Sprache</label>
+      <select id="langSel2"><option value="de">Deutsch</option><option value="sr">Srpski (latinica)</option><option value="sr-Cyrl">Српски (ћирилица)</option></select>
+    </div>
+    <h3 data-t>Stimmung</h3>
+    <div class="grid2">
+      <div class="field">
+        <label for="a4Sel" data-t>Kammerton a′</label>
+        <select id="a4Sel">
+          <option value="415" data-t>415 Hz (barock)</option>
+          <option value="430">430 Hz</option>
+          <option value="440">440 Hz</option>
+          <option value="442">442 Hz</option>
+          <option value="443">443 Hz</option>
+          <option value="custom" data-t>eigener Wert …</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="a4Custom" data-t>Eigener Wert (Hz)</label>
+        <input id="a4Custom" type="number" min="400" max="470" step="0.5" value="440">
+      </div>
+    </div>
+    <h3 data-t>Mikrofon</h3>
+    <div class="grid2">
+      <div class="field">
+        <label for="devSel" data-t>Eingang</label>
+        <select id="devSel"><option value="">Standard</option></select>
+      </div>
+      <div class="field">
+        <label for="gateRange"><span data-t>Empfindlichkeit</span> <output id="gateOut" class="num"></output></label>
+        <input type="range" id="gateRange" min="1" max="10" step="1" value="6">
+      </div>
+    </div>
+    <p class="muted" data-t>Tipp: Headset- und Handy-Mikrofone funktionieren. Lege das Gerät 0,5–1 m vor dich auf den Notenständer. Bei sehr leiser Erkennung die Empfindlichkeit erhöhen, bei Störgeräuschen senken.</p>
+    <h3 data-t>Darstellung</h3>
+    <div class="grid2">
+      <div class="field">
+        <label for="namesSel" data-t>Notennamen</label>
+        <select id="namesSel"><option value="de" data-t>Deutsch (as′′, h′)</option><option value="en" data-t>International (A♭5, B4)</option></select>
+      </div>
+      <div class="field">
+        <label for="themeSel" data-t>Farbschema</label>
+        <select id="themeSel"><option value="system" data-t>wie System</option><option value="light" data-t>hell</option><option value="dark" data-t>dunkel</option></select>
+      </div>
+    </div>
+    <label class="toggle"><input type="checkbox" id="guidesOn" checked> <span data-t>Halbton-Markierungen auf dem 3D-Griffbrett</span></label>
+    <h3 data-t>Daten</h3>
+    <div class="row">
+      <button class="btn small" id="resetFing" type="button" data-t>Eigene Fingersätze zurücksetzen</button>
+      <button class="btn small" id="resetHist" type="button" data-t>Übungsverlauf löschen</button>
+    </div>
+    <p class="footer-note" data-t>Alle Daten (Einstellungen, Verlauf, Referenzaufnahmen) bleiben nur in diesem Browser auf diesem Gerät.</p>
+    <div class="row" style="justify-content:flex-end"><button class="btn primary" value="close" data-t>Fertig</button></div>
+  </form>
+</dialog>
+
+<dialog id="helpDlg" aria-labelledby="helpTitle">
+  <form method="dialog" class="dlg help">
+    <h2 id="helpTitle" data-t>So übst du mit dem Inverno-Trainer</h2>
+    <ol>
+      <li data-t-html><strong>Mikrofon starten</strong> (oben rechts) und den Zugriff erlauben. Kammerton in den Einstellungen anpassen, falls deine Geige nicht auf 440 Hz gestimmt ist.</li>
+      <li data-t-html><strong>Takte wählen:</strong> Buchstaben F–N anklicken, Takte eintippen oder in den Noten über mehrere Takte ziehen. Ein Klick auf eine Note setzt den Startpunkt.</li>
+      <li data-t-html><strong>Ton für Ton:</strong> Spiele den markierten Ton. Die 3D-Geige zeigt Saite und Finger (blauer Ring) und wo dein Finger laut Tonhöhe gerade wirklich liegt (Punkt). Erst wenn du sauber triffst und kurz hältst, geht es weiter.</li>
+      <li data-t-html><strong>Passage:</strong> Tempo wählen, aufnehmen, durchspielen. Danach siehst du Note für Note, wie viele Cent du daneben lagst, falsche oder fehlende Töne, Rhythmus und deine Tendenzen pro Finger.</li>
+      <li data-t-html><strong>Referenzen:</strong> Lade eine Aufnahme, der Trainer findet jeden Takt darin. Spiele jede Auswahl daraus ab, auch langsamer, oder öffne YouTube an der passenden Stelle.</li>
+      <li data-t-html><strong>Fingersatz ändern:</strong> Auf eine Zahl in der Griffspur unter den Noten klicken.</li>
+      <li data-t-html><strong>Aufgaben:</strong> Lehrerinnen und Lehrer stellen unter „Aufgaben → Lehrer“ Passagen mit Hinweisen, Zieltempo und eigener Referenz-Einspielung zusammen und schicken den Plan als Datei oder Link. Schüler öffnen ihn, üben jede Aufgabe mit einem Klick und schicken ihren Fortschritt zurück.</li>
+    </ol>
+    <p class="muted" data-t>Tastatur: Leertaste = Start/Stopp · ← → = Ton zurück/vor · R = Zielton anhören · Esc = abbrechen</p>
+    <div class="row" style="justify-content:flex-end"><button class="btn primary" value="close" data-t>Los geht’s</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow-bravura.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="js/i18n.js?v=12"></script>
+<script src="js/score-data.js?v=12"></script>
+<script src="js/music.js?v=12"></script>
+<script src="js/fingering.js?v=12"></script>
+<script src="js/pitch.js?v=12"></script>
+<script src="js/analysis.js?v=12"></script>
+<script src="js/audio.js?v=12"></script>
+<script src="js/reference.js?v=12"></script>
+<script src="js/score-view.js?v=12"></script>
+<script src="js/chart.js?v=12"></script>
+<script src="js/violin3d.js?v=12"></script>
+<script src="js/app.js?v=12"></script>
+<script src="js/tasks.js?v=12"></script>
+</body>
+</html>
