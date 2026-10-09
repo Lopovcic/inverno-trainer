@@ -18,7 +18,7 @@
   };
   const DEFAULTS = {
     a4: 440, tol: 15, holdMs: 300, autoTone: false, merge: true, loop: false,
-    names: 'de', theme: 'system', lane: true, view3d: null, guides: true,
+    names: 'de', theme: 'system', lane: true, view3d: null, guides: true, stage: 'large',
     tempo: 40, countIn: true, metro: false, follow: true, deviceId: '', gate: 6,
     refRate: 100, refLoop: false, activeRef: null,
   };
@@ -79,6 +79,27 @@
   function palette() {
     return { accent: css('--accent', '#1F6E94'), good: css('--good', '#2E7D4F'), warn: css('--warn', '#B7791F'), bad: css('--bad', '#C0392B'), ink: css('--ink', '#142028'), bg: css('--surface', '#FBFCFD') };
   }
+  // ------------------------------------------------------------------ stage (3D + tuner HUD)
+  /** Height of the tuner HUD lying over the 3D canvas (0 when it sits below it). */
+  function stageInsets() {
+    const tuner = $('#tuner'), viewer = $('#viewer');
+    if (!tuner || !viewer || getComputedStyle(tuner).position !== 'absolute') return { top: 0, bottom: 0 };
+    return { top: 0, bottom: Math.max(0, viewer.getBoundingClientRect().bottom - tuner.getBoundingClientRect().top) + 4 };
+  }
+  function syncInsets() {
+    if (!violin || !violin.setInsets) return;
+    const i = stageInsets();
+    violin.setInsets(i.top, i.bottom);
+  }
+  function syncStage() {
+    const compact = settings.stage === 'compact';
+    $('#stage').classList.toggle('compact', compact);
+    const btn = $('#stageSizeBtn'), label = L(compact ? '3D-Ansicht vergrößern' : '3D-Ansicht verkleinern');
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+    syncInsets();
+  }
+
   function refreshColors() {
     if (view) view.rerender();
     if (violin && violin.setPalette) violin.setPalette(palette());
@@ -1231,6 +1252,7 @@
     if (view) view.rerender();
     if (chart) chart.draw();
     if (IT.Tasks && IT.app) IT.Tasks.render();
+    syncStage();
   }
 
   function init() {
@@ -1277,10 +1299,14 @@
     // chart
     chart = new IT.PitchChart($('#chart'), $('#chartTip'));
     chart.onSelect = ni => Passage.showNote(ni);
-    // 3D violin
+    // 3D violin on the stage
+    syncStage();
     try {
       if (IT.Violin3D && window.THREE) {
-        violin = new IT.Violin3D($('#viewer'), { palette: palette(), view: settings.view3d || undefined, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+        violin = new IT.Violin3D($('#viewer'), {
+          palette: palette(), view: settings.view3d || undefined, intro: true, insets: stageInsets(),
+          reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        });
         if (violin.setGuides) violin.setGuides(settings.guides);
       } else {
         $('#viewer').innerHTML = `<div class="viewer-fallback">${L('Die 3D-Ansicht konnte nicht geladen werden (offline?). Saite und Finger stehen im Stimmgerät darunter.')}</div>`;
@@ -1296,6 +1322,12 @@
       settings.view3d = b.dataset.view; saveSettings(); markView(b.dataset.view);
     }));
     markView(settings.view3d || (violin && violin.view) || '');
+    $('#stageSizeBtn').addEventListener('click', () => {
+      settings.stage = settings.stage === 'compact' ? 'large' : 'compact';
+      saveSettings(); syncStage();
+    });
+    // the HUD changes height with the layout (window width, language, wrapped hints)
+    if (window.ResizeObserver) new ResizeObserver(syncInsets).observe($('#tuner'));
 
     // controls
     $$('.tab').forEach(t => t.addEventListener('click', () => setMode(t.id.replace('tab-', ''))));

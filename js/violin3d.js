@@ -232,6 +232,7 @@
     board: { pos: [122, 380, 58], target: [122, 22, 0], fov: 32 },
     full: { pos: [-120, 430, 470], target: [200, 0, 0], fov: 36 },
   };
+  const SPAN_FB = 340, SPAN_ALL = 640;       // mm the board view shows at least / at most across
   const DEFAULT_PALETTE = { accent: '#1F6E94', good: '#2E7D4F', warn: '#B7791F', bad: '#C0392B', ink: '#142028' };
 
   class Violin3D {
@@ -280,7 +281,8 @@
       c.maxDistance = 1300;
       c.rotateSpeed = 0.7;
       c.addEventListener('change', () => this.invalidate());
-      c.addEventListener('start', () => { this._tween = null; });
+      // once the player turns the violin themselves, resizes no longer re-frame the view
+      c.addEventListener('start', () => { this._tween = null; this._userMoved = true; });
       r.domElement.addEventListener('dblclick', () => this.setView(this.view));
 
       this.target = null; this.next = null;
@@ -288,12 +290,27 @@
       this.vib = [0, 0, 0, 0];
       this.pulseUntil = 0;
       this._raf = 0; this._last = 0;
+      this._insets = { top: 0, bottom: 0 };
+      if (opts.insets) this._insets = { top: opts.insets.top || 0, bottom: opts.insets.bottom || 0 };
       this._frameBound = t => this._frame(t);
       this._ro = new ResizeObserver(() => this.resize());
       this._ro.observe(container);
       this.resize();
-      const v = opts.view || (container.clientWidth / Math.max(1, container.clientHeight) > 1.3 ? 'board' : 'player');
+      const v = opts.view || (this.camera.aspect > 1.3 ? 'board' : 'player');
       this.setView(v, false);
+      if (opts.intro && !this.reduced) this._intro();
+    }
+
+    /** Opening shot: start wide and low beside the violin, then swing into the chosen view. */
+    _intro() {
+      const T = this.T, to = this._goal(this.view);
+      const s = new T.Spherical().setFromVector3(to.pos.clone().sub(to.tgt));
+      s.radius *= 2.3; s.phi = clamp(s.phi + 0.6, 0.55, 1.25); s.theta -= 1.2;
+      const tgt = new T.Vector3(BODY_X0 + 60, 0, 0);
+      const from = { pos: new T.Vector3().setFromSpherical(s).add(tgt), tgt, fov: to.fov + 4 };
+      this._jump(from);
+      this._tween = { t0: null, delay: 150, dur: 2300, from, to };
+      this.invalidate();
     }
 
     _fail(msg) {
@@ -679,31 +696,66 @@
       this.invalidate();
     }
 
-    setView(name, animate = true) {
+    setView(name, animate = true, dur = 650) {
       if (!this.ok || !VIEWS[name]) return;
       this.view = name;
+      this._userMoved = false;
+      const to = this._goal(name);
+      if (!animate || this.reduced) this._jump(to);
+      else this._tween = { t0: null, dur, from: { pos: this.camera.position.clone(), tgt: this.controls.target.clone(), fov: this.camera.fov }, to };
+      this.invalidate();
+    }
+
+    /** Camera pose for a named view, fitted to the free (not overlaid) part of the canvas. */
+    _goal(name) {
       const v = VIEWS[name];
       const aspect = this.camera.aspect || 1.4;
       const pos = new this.T.Vector3(...v.pos), tgt = new this.T.Vector3(...v.target);
-      // fit the fingerboard (nut … end, ≈ 330 mm) to the container width in the board view
       if (name === 'board') {
-        const need = 330 / (2 * Math.tan(v.fov * Math.PI / 360) * aspect);
-        const d = clamp(need, 260, 760);
+        // fit the fingerboard (≈ 330 mm) across, but keep ≈ 10 cm in height; on a wide
+        // stage the spare width slides the frame from the fingerboard toward the body
+        const t2 = 2 * Math.tan(v.fov * Math.PI / 360);
+        const d = clamp(Math.max(SPAN_FB / (t2 * aspect), 105 / t2), 180, 760);
+        const shift = 68 * clamp((t2 * aspect * d - SPAN_FB) / (SPAN_ALL - SPAN_FB), 0, 1);
+        tgt.x += shift; pos.x += shift;
         pos.sub(tgt).setLength(d).add(tgt);
+      } else if (name === 'full' && aspect > 1.6) {
+        // wide stage: come closer until the violin (≈ 64 × 29 cm on screen) fills the frame
+        const t2 = 2 * Math.tan(v.fov * Math.PI / 360);
+        const d = Math.max(640 / (t2 * aspect), 290 / t2);
+        if (d < pos.distanceTo(tgt)) pos.sub(tgt).setLength(d).add(tgt);
       } else if (aspect < 1.2) {
         pos.sub(tgt).multiplyScalar(1 + (1.2 - aspect) * 0.9).add(tgt);
       }
-      if (!animate || this.reduced) {
-        this.camera.position.copy(pos);
-        this.camera.fov = v.fov;
-        this.camera.updateProjectionMatrix();
-        this.controls.target.copy(tgt);
-        this.controls.update();
-        this._tween = null;
-      } else {
-        this._tween = { t0: performance.now(), dur: 650, fromPos: this.camera.position.clone(), fromTgt: this.controls.target.clone(), fromFov: this.camera.fov, pos, tgt, fov: v.fov };
-      }
-      this.invalidate();
+      return { pos, tgt, fov: v.fov };
+    }
+
+    _jump(p) {
+      this.camera.position.copy(p.pos);
+      this.camera.fov = p.fov;
+      this.camera.updateProjectionMatrix();
+      this.controls.target.copy(p.tgt);
+      this.controls.update();
+      this._tween = null;
+    }
+
+    /** After a size change: keep the chosen view framed (unless the player turned the violin). */
+    _reframe() {
+      if (!this.view || this._userMoved) return;
+      const to = this._goal(this.view);
+      if (this._tween) this._tween.to = to; else this._jump(to);
+    }
+
+    /**
+     * Parts of the canvas covered by overlays (px). The views are framed in the free band
+     * between them; the covered parts still show the scene, extended around that frame.
+     */
+    setInsets(top = 0, bottom = 0) {
+      if (!this.ok) return;
+      top = Math.max(0, Math.round(top)); bottom = Math.max(0, Math.round(bottom));
+      if (top === this._insets.top && bottom === this._insets.bottom) return;
+      this._insets = { top, bottom };
+      this.resize(true);
     }
 
     setPalette(p) {
@@ -728,14 +780,22 @@
 
     setGuides(on) { if (!this.ok) return; this.guides.visible = !!on; this.invalidate(); }
 
-    resize() {
+    resize(force) {
       if (!this.ok) return;
       const w = Math.max(1, this.el.clientWidth), h = Math.max(1, this.el.clientHeight);
-      if (w === this._w && h === this._h) return;
+      if (!force && w === this._w && h === this._h) return;
       this._w = w; this._h = h;
       this.renderer.setSize(w, h, false);
-      this.camera.aspect = w / h;
+      const top = Math.min(this._insets.top, h * 0.3), bottom = Math.min(this._insets.bottom, h * 0.45);
+      if (top || bottom) {
+        // project as if the canvas were only the free band, and render the full canvas around it
+        this.camera.setViewOffset(w, h - top - bottom, 0, -top, w, h);
+      } else {
+        this.camera.clearViewOffset();
+        this.camera.aspect = w / h;
+      }
       this.camera.updateProjectionMatrix();
+      this._reframe();
       this.invalidate();
     }
 
@@ -765,14 +825,21 @@
       this._last = now;
       let busy = false;
 
-      // camera tween
+      // camera tween: orbit around the (moving) target instead of cutting through the violin
       if (this._tween) {
-        const tw = this._tween;
+        const tw = this._tween, a = tw.from, b = tw.to;
+        if (tw.t0 == null) tw.t0 = now + (tw.delay || 0);   // start on the first drawn frame
         const k = clamp((now - tw.t0) / tw.dur, 0, 1);
         const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-        this.camera.position.lerpVectors(tw.fromPos, tw.pos, e);
-        this.controls.target.lerpVectors(tw.fromTgt, tw.tgt, e);
-        this.camera.fov = tw.fromFov + (tw.fov - tw.fromFov) * e;
+        const sa = tw.sa || (tw.sa = new T.Spherical().setFromVector3(a.pos.clone().sub(a.tgt)));
+        const sb = new T.Spherical().setFromVector3(b.pos.clone().sub(b.tgt));
+        let dTheta = sb.theta - sa.theta;
+        dTheta -= Math.round(dTheta / (2 * Math.PI)) * 2 * Math.PI;
+        this.controls.target.lerpVectors(a.tgt, b.tgt, e);
+        this.camera.position.setFromSphericalCoords(
+          sa.radius + (sb.radius - sa.radius) * e, sa.phi + (sb.phi - sa.phi) * e, sa.theta + dTheta * e,
+        ).add(this.controls.target);
+        this.camera.fov = a.fov + (b.fov - a.fov) * e;
         this.camera.updateProjectionMatrix();
         if (k >= 1) this._tween = null; else busy = true;
       }

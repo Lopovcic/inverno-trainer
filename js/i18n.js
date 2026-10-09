@@ -42,6 +42,8 @@
       'Notni tekst: <a href="https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=351" target="_blank" rel="noopener">«Mutopia Project»</a> («Mutopia-2010/02/08-351»), prema prvom izdanju, Amsterdam 1725), licenca <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">«CC BY-SA 3.0»</a>. Prstomet je predlog trenera i može se menjati za svaku notu.',
     'Instrument und Stimmgerät': 'Instrument i štimer',
     '3D-Ansicht': '«3D» prikaz',
+    '3D-Ansicht vergrößern': 'Uvećaj «3D» prikaz',
+    '3D-Ansicht verkleinern': 'Smanji «3D» prikaz',
     'Spieler': 'Svirač',
     'Griffbrett': 'Hvataljka',
     'Ganz': 'Cela',

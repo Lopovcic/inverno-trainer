@@ -1,6 +1,7 @@
 /* Inverno-Trainer · app.css
- * Layout: a practice stand — the score sheet on the left, instrument + tuner on the
- * right (sticky); on phones the instrument sits on top and the score scrolls below.
+ * Layout: a practice stand — a lit "stage" with the 3D violin and the tuner HUD on
+ * top of the score sheet, the practice controls in a column on the right; on phones
+ * stage, controls and score stack.
  * Palette "frost & varnish": cold frosted neutrals, glacier-blue targets, the
  * violin's varnish brown as brand colour; semantic colours only for results.
  */
@@ -21,6 +22,11 @@
   --bad: #C0392B;
   --miss: #8A96A0;
   --shadow: 0 1px 2px rgba(20, 32, 40, 0.06), 0 8px 24px -12px rgba(20, 32, 40, 0.18);
+  --stage-top: #F8FAFB;
+  --stage-bottom: #D9E2E9;
+  --stage-glow: rgba(255, 240, 222, 0.95);
+  --hud: rgba(251, 252, 253, 0.82);
+  --stage-h: clamp(280px, 46vh, 560px);
 
   --font-display: "Bodoni Moda", "Bodoni 72", Didot, "Libre Bodoni", Georgia, serif;
   --font-ui: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -44,6 +50,7 @@
     --accent-soft: rgba(121, 195, 230, 0.15); --varnish: #D98B4E;
     --good: #5CC08A; --warn: #E3B04B; --bad: #F07167; --miss: #6D7C88;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+    --stage-top: #16202A; --stage-bottom: #070B0F; --stage-glow: rgba(217, 139, 78, 0.20); --hud: rgba(19, 27, 34, 0.80);
     color-scheme: dark;
   }
 }
@@ -53,6 +60,7 @@
   --accent-soft: rgba(121, 195, 230, 0.15); --varnish: #D98B4E;
   --good: #5CC08A; --warn: #E3B04B; --bad: #F07167; --miss: #6D7C88;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -14px rgba(0, 0, 0, 0.6);
+  --stage-top: #16202A; --stage-bottom: #070B0F; --stage-glow: rgba(217, 139, 78, 0.20); --hud: rgba(19, 27, 34, 0.80);
   color-scheme: dark;
 }
 
@@ -116,9 +124,13 @@ button, input, select { font: inherit; color: inherit; }
 .langsel:hover { color: var(--ink); }
 
 .workspace {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 420px); grid-template-rows: minmax(0, 1fr);
-  gap: 16px; padding: 14px var(--gutter) 16px; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "stage inst" "score inst";
+  gap: 14px 16px; padding: 14px var(--gutter) 16px; min-height: 0;
 }
+.stage { grid-area: stage; }
+.col-score { grid-area: score; }
+.col-inst { grid-area: inst; }
 .col-score { display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; }
 .col-inst { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; overflow-y: auto; padding-bottom: 8px; }
 
@@ -155,7 +167,7 @@ button, input, select { font: inherit; color: inherit; }
 .badge.solo { background: color-mix(in srgb, var(--varnish) 16%, transparent); color: var(--varnish); }
 
 .sheet {
-  position: relative; flex: 1; min-height: 320px; overflow-y: auto; overflow-x: hidden;
+  position: relative; flex: 1; min-height: 180px; overflow-y: auto; overflow-x: hidden;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 10px 6px 30px;
 }
@@ -204,33 +216,61 @@ button, input, select { font: inherit; color: inherit; }
 
 /* ------------------------------------------------------------------ instrument column */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-.viewer-wrap { position: relative; overflow: hidden; }
-.viewer { width: 100%; aspect-ratio: 4 / 3; max-height: 46vh; }
-.viewer canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; }
+.stage {
+  position: relative; min-width: 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(90% 85% at 50% 30%, var(--stage-glow) 0%, transparent 62%), linear-gradient(180deg, var(--stage-top), var(--stage-bottom));
+  box-shadow: var(--shadow);
+}
+.viewer-wrap { position: relative; }
+.viewer { width: 100%; height: var(--stage-h); transition: height 260ms cubic-bezier(.2,.8,.2,1); }
+.stage.compact { --stage-h: clamp(160px, 22vh, 250px); }
+.viewer canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; animation: v3d-in 900ms ease-out both; }
+@keyframes v3d-in { from { opacity: 0; } to { opacity: 1; } }
 .viewer-fallback { display: grid; place-items: center; height: 100%; padding: 16px; color: var(--ink-2); text-align: center; font-size: var(--fs-sm); }
-.views { position: absolute; left: 8px; top: 8px; display: flex; gap: 4px; }
+.views { position: absolute; left: 10px; top: 10px; display: flex; gap: 4px; }
 .views button {
   border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(4px);
   padding: 3px 9px; border-radius: 999px; font-size: var(--fs-xs); cursor: pointer; color: var(--ink-2);
 }
 .views button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink-2); }
+.stage-tools { position: absolute; right: 10px; top: 10px; display: flex; align-items: center; gap: 6px; }
 .legend {
-  position: absolute; right: 8px; bottom: 8px; display: flex; gap: 10px; font-size: var(--fs-xs); color: var(--ink-2);
-  background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 3px 8px; border-radius: 999px;
+  display: flex; gap: 10px; font-size: var(--fs-xs); color: var(--ink-2);
+  background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 4px 9px; border-radius: 999px;
 }
+.iconbtn.sm { width: 28px; height: 28px; background: color-mix(in srgb, var(--surface) 85%, transparent); }
+.iconbtn .i-grow { display: none; }
+.stage.compact .iconbtn .i-grow { display: block; }
+.stage.compact .iconbtn .i-shrink { display: none; }
 .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
 .legend .t { background: var(--accent); }
 .legend .p { background: var(--good); }
 
-.tuner { padding: 14px 16px 12px; display: grid; gap: 10px; }
-.tuner-top { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 14px; }
+.tuner {
+  display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; gap: 6px 24px; align-items: center;
+  padding: 10px 18px; background: var(--hud); border-top: 1px solid var(--line);
+}
+/* large stage: the tuner floats over the bottom of the 3D view as a glass bar */
+.stage:not(.compact) .tuner {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; max-width: 1040px; margin-inline: auto; padding: 8px 18px 11px;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius: 14px;
+  backdrop-filter: blur(10px) saturate(1.15); -webkit-backdrop-filter: blur(10px) saturate(1.15); box-shadow: var(--shadow);
+}
+.stage:not(.compact) .t-meter { gap: 3px; }
+.stage:not(.compact) .hint { height: 2.7em; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.stage:not(.compact) .hold { position: absolute; left: 16px; right: 16px; bottom: 4px; height: 3px; background: transparent; }
+.t-target { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "lbl lbl" "name meta"; gap: 3px 12px; align-items: center; min-width: 0; }
+.t-target .label { grid-area: lbl; }
+.t-target .target-name { grid-area: name; }
+.t-target .target-meta { grid-area: meta; max-width: 300px; }
+.t-meter { display: grid; gap: 6px; min-width: 0; }
+.t-live { text-align: right; min-width: 92px; }
 .label { font-size: var(--fs-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); font-weight: 700; }
-.target-name { font: 600 var(--fs-hero)/0.95 var(--font-display); letter-spacing: -0.01em; }
-.target-meta { display: flex; flex-wrap: wrap; gap: 5px; align-self: center; }
+.target-name { font: 600 clamp(2.3rem, 3.4vw, 3.1rem)/0.95 var(--font-display); letter-spacing: -0.01em; }
+.target-meta { display: flex; flex-wrap: wrap; gap: 5px; }
 .pill { font-size: var(--fs-sm); padding: 3px 9px; border-radius: 999px; background: var(--surface-2); white-space: nowrap; }
 .pill.str { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
-.live { text-align: right; min-width: 88px; }
-.live-cents { font: 600 1.9rem/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.live-cents { font: 600 2.1rem/1 var(--font-mono); font-variant-numeric: tabular-nums; }
 .live-note { font-size: var(--fs-sm); color: var(--ink-2); min-height: 1.2em; }
 .state-good { color: var(--good); }
 .state-warn { color: var(--warn); }
@@ -408,13 +448,32 @@ textarea.textin { resize: vertical; font: inherit; min-height: 2.6rem; }
 /* ------------------------------------------------------------------ responsive */
 @media (max-width: 1100px) {
   .workspace { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); }
+  .tuner { gap: 6px 16px; padding-inline: 14px; }
+  .t-target .target-meta { max-width: 190px; }
+}
+@media (min-width: 861px) {
+  /* while an analysis is open the score column needs room for the chart: a lower stage */
+  .workspace:has(#analysisBand:not([hidden])) .stage:not(.compact) { --stage-h: clamp(220px, 32vh, 380px); }
+  .stage:not(.compact) ~ .col-score .chart { height: 150px; }
+}
+@media (max-height: 760px) and (min-width: 861px) {
+  :root { --stage-h: clamp(220px, 40vh, 320px); }
+  .stage.compact { --stage-h: clamp(140px, 20vh, 190px); }
+  .target-name { font-size: 2.2rem; }
 }
 @media (max-width: 860px) {
   .app { height: auto; }
-  .workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; padding-top: 10px; }
-  .col-inst { order: -1; overflow: visible; }
+  .workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "stage" "inst" "score"; padding-top: 10px; }
+  .col-inst { overflow: visible; }
   .sheet { min-height: 60vh; max-height: none; overflow: visible; }
-  .viewer { aspect-ratio: 16 / 10; max-height: 38vh; }
+  :root { --stage-h: clamp(210px, 40vh, 360px); }
+  .stage.compact { --stage-h: clamp(150px, 24vh, 220px); }
+  .stage .tuner, .stage:not(.compact) .tuner { position: static; border-radius: 0; border: 0; border-top: 1px solid var(--line); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .tuner { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "target live" "meter meter"; padding: 12px 14px; }
+  .t-target { grid-area: target; }
+  .t-live { grid-area: live; }
+  .t-meter { grid-area: meter; }
+  .t-target .target-meta { max-width: none; }
   .brand-sub { display: none; }
   .tabs { order: 3; width: 100%; justify-content: stretch; }
   .tab { flex: 1; padding: 7px 8px; }

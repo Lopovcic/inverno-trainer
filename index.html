@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;600&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,700;1,400&family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,500&display=swap">
-<link rel="stylesheet" href="css/app.css?v=12">
+<link rel="stylesheet" href="css/app.css?v=14">
 </head>
 <body>
 <div class="app">
@@ -44,6 +44,48 @@
   </header>
 
   <main class="workspace">
+    <section class="stage" id="stage" aria-label="Instrument und Stimmgerät" data-t-attr="aria-label">
+      <div class="viewer-wrap">
+        <div class="viewer" id="viewer" aria-hidden="true"></div>
+        <div class="views" role="group" aria-label="3D-Ansicht" data-t-attr="aria-label">
+          <button type="button" data-view="player" aria-pressed="false" data-t>Spieler</button>
+          <button type="button" data-view="board" aria-pressed="false" data-t>Griffbrett</button>
+          <button type="button" data-view="full" aria-pressed="false" data-t>Ganz</button>
+        </div>
+        <div class="stage-tools">
+          <div class="legend" aria-hidden="true"><span><i class="t"></i><span data-t>Ziel</span></span><span><i class="p" id="legendPlayed"></i><span data-t>gespielt</span></span></div>
+          <button class="iconbtn sm" id="stageSizeBtn" type="button" aria-label="3D-Ansicht verkleinern">
+            <svg class="i-shrink" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg class="i-grow" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="tuner" id="tuner">
+        <div class="t-target">
+          <div class="label" id="targetLabel">Zielton</div>
+          <div class="target-name" id="targetName">–</div>
+          <div class="target-meta" id="targetMeta"></div>
+        </div>
+        <div class="t-meter">
+          <div class="cmeter" aria-hidden="true">
+            <div class="track"></div>
+            <div class="zone" id="cZone"></div>
+            <div class="tick" style="left:0%"></div><div class="tick" style="left:25%"></div><div class="tick c" style="left:50%"></div><div class="tick" style="left:75%"></div><div class="tick" style="left:100%"></div>
+            <div class="needle" id="needle" style="left:50%"></div>
+            <div class="scale"><span>−50</span><span>−25</span><span>0</span><span>+25</span><span>+50 ct</span></div>
+          </div>
+          <div class="hold" aria-hidden="true"><i id="holdBar"></i></div>
+          <div class="hint" id="hint">Wähle Takte in den Noten und starte das Mikrofon.</div>
+        </div>
+        <div class="t-live">
+          <div class="label" data-t>Gespielt</div>
+          <div class="live-cents state-idle" id="liveCents">–</div>
+          <div class="live-note" id="liveNote"></div>
+        </div>
+        <div id="srStatus" class="sr-only" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
     <section class="col-score" aria-label="Noten" data-t-attr="aria-label">
       <div class="selbar">
         <div class="sections" id="sectionChips" role="group" aria-label="Abschnitte (Buchstaben)" data-t-attr="aria-label"></div>
@@ -78,42 +120,7 @@
       <p class="footer-note" data-t-html>Notentext: <a href="https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=351" target="_blank" rel="noopener">Mutopia Project</a> (Mutopia-2010/02/08-351, nach der Erstausgabe Amsterdam 1725), Lizenz <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>. Fingersätze sind Vorschläge des Trainers und lassen sich pro Note ändern.</p>
     </section>
 
-    <aside class="col-inst" aria-label="Instrument und Stimmgerät" data-t-attr="aria-label">
-      <div class="card viewer-wrap">
-        <div class="viewer" id="viewer" aria-hidden="true"></div>
-        <div class="views" role="group" aria-label="3D-Ansicht" data-t-attr="aria-label">
-          <button type="button" data-view="player" aria-pressed="false" data-t>Spieler</button>
-          <button type="button" data-view="board" aria-pressed="false" data-t>Griffbrett</button>
-          <button type="button" data-view="full" aria-pressed="false" data-t>Ganz</button>
-        </div>
-        <div class="legend" aria-hidden="true"><span><i class="t"></i><span data-t>Ziel</span></span><span><i class="p" id="legendPlayed"></i><span data-t>gespielt</span></span></div>
-      </div>
-
-      <div class="card tuner" id="tuner">
-        <div class="tuner-top">
-          <div>
-            <div class="label" id="targetLabel">Zielton</div>
-            <div class="target-name" id="targetName">–</div>
-          </div>
-          <div class="target-meta" id="targetMeta"></div>
-          <div class="live">
-            <div class="label" data-t>Gespielt</div>
-            <div class="live-cents state-idle" id="liveCents">–</div>
-            <div class="live-note" id="liveNote"></div>
-          </div>
-        </div>
-        <div class="cmeter" aria-hidden="true">
-          <div class="track"></div>
-          <div class="zone" id="cZone"></div>
-          <div class="tick" style="left:0%"></div><div class="tick" style="left:25%"></div><div class="tick c" style="left:50%"></div><div class="tick" style="left:75%"></div><div class="tick" style="left:100%"></div>
-          <div class="needle" id="needle" style="left:50%"></div>
-          <div class="scale"><span>−50</span><span>−25</span><span>0</span><span>+25</span><span>+50 ct</span></div>
-        </div>
-        <div class="hold" aria-hidden="true"><i id="holdBar"></i></div>
-        <div class="hint" id="hint">Wähle Takte in den Noten und starte das Mikrofon.</div>
-        <div id="srStatus" class="sr-only" role="status" aria-live="polite"></div>
-      </div>
-
+    <aside class="col-inst" aria-label="Übungsmodus" data-t-attr="aria-label">
       <!-- Ton für Ton -->
       <section class="card panel" id="panel-step" role="tabpanel" aria-labelledby="tab-step">
         <div class="row split">
@@ -322,18 +329,18 @@
 <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow-bravura.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
-<script src="js/i18n.js?v=12"></script>
-<script src="js/score-data.js?v=12"></script>
-<script src="js/music.js?v=12"></script>
-<script src="js/fingering.js?v=12"></script>
-<script src="js/pitch.js?v=12"></script>
-<script src="js/analysis.js?v=12"></script>
-<script src="js/audio.js?v=12"></script>
-<script src="js/reference.js?v=12"></script>
-<script src="js/score-view.js?v=12"></script>
-<script src="js/chart.js?v=12"></script>
-<script src="js/violin3d.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
-<script src="js/tasks.js?v=12"></script>
+<script src="js/i18n.js?v=14"></script>
+<script src="js/score-data.js?v=14"></script>
+<script src="js/music.js?v=14"></script>
+<script src="js/fingering.js?v=14"></script>
+<script src="js/pitch.js?v=14"></script>
+<script src="js/analysis.js?v=14"></script>
+<script src="js/audio.js?v=14"></script>
+<script src="js/reference.js?v=14"></script>
+<script src="js/score-view.js?v=14"></script>
+<script src="js/chart.js?v=14"></script>
+<script src="js/violin3d.js?v=14"></script>
+<script src="js/app.js?v=14"></script>
+<script src="js/tasks.js?v=14"></script>
 </body>
 </html>
