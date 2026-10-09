@@ -12,15 +12,14 @@ Browser-Übungswerkzeug für **Antonio Vivaldi, „L’inverno“ (Der Winter), 
 
 ## Starten
 
-**Am PC/Mac:** `index.html` im Chrome, Edge, Firefox oder Safari öffnen (Doppelklick genügt) und oben rechts **Mikrofon starten**.
+**Online (Handy, Tablet, jeder Rechner):** <https://lopovcic.github.io/inverno-trainer/> öffnen und oben rechts **Mikrofon starten**. Auf dem Handy lässt sich die Seite über das Browser-Menü („Zum Startbildschirm hinzufügen“) wie eine App ablegen.
+
+**Lokal am PC/Mac:** `index.html` im Chrome, Edge, Firefox oder Safari öffnen (Doppelklick genügt).
 Beim ersten Start braucht der Browser Internet, um Notensatz (VexFlow), 3D (three.js) und Schriften zu laden.
 
-**Auf dem Handy/Tablet:** Browser erlauben das Mikrofon nur auf `https://`-Seiten. Den Ordner deshalb einmal statisch hosten, z. B.:
+Browser erlauben das Mikrofon nur auf `https://`-Seiten oder lokal geöffneten Dateien. Ein lokaler Server im WLAN (`http://192.168…`) reicht fürs Handy deshalb nicht.
 
-- **Netlify Drop:** den Ordner `Inverno-Trainer` auf <https://app.netlify.com/drop> ziehen. Du bekommst sofort eine https-Adresse.
-- **GitHub Pages:** Ordner in ein Repository legen und unter *Settings → Pages* veröffentlichen.
-
-Ein lokaler Server im WLAN (`http://192.168…`) reicht fürs Handy nicht, weil dort kein Mikrofon freigegeben wird.
+**Aktualisieren:** Änderungen committen und `git push` – GitHub Pages veröffentlicht sie nach ein bis zwei Minuten (Versionsnummer `?v=…` in `index.html` erhöhen, damit Browser keine alten Dateien verwenden).
 
 ## Tipps
 
